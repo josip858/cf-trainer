@@ -4,9 +4,14 @@ version ="0.1.0"
 dependencies = ["fastapi[standard]"]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest","pytest-asyncio"]
 
 [tool.pytest.ini_options]
 pythonpath=["."]
+asyncio_mode="auto"
+markers= ["slow:tests that call web"]
+
+[tool.setuptools]
+py-modules=["main","cf_client"]
 
 
