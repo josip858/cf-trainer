@@ -1,12 +1,12 @@
 import pytest, httpx, cf_client
 
-handle = "tourist"
-invalid_handle = "ajigjgioagiogfnmadgmj"
+HANDLE = "tourist"
+INVALID_HANDLE = "ajigjgioagiogfnmadgmj"
 
 
 @pytest.mark.slow
 async def test_get_user_rating_valid() -> None:
-    rating = await cf_client.get_user_rating(handle)
+    rating = await cf_client.get_user_rating(HANDLE)
     assert isinstance(rating, int)
 
 
@@ -16,12 +16,12 @@ async def test_get_user_rating_no_contest(monkeypatch) -> None:
 
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
 
-    assert await cf_client.get_user_rating(handle) is None
+    assert await cf_client.get_user_rating(HANDLE) is None
 
 
 @pytest.mark.slow
 async def test_get_solved_list_valid() -> None:
-    solved_list = await cf_client.get_solved_list(handle)
+    solved_list = await cf_client.get_solved_list(HANDLE)
     assert solved_list
     assert "2A" in solved_list
 
@@ -31,7 +31,7 @@ async def test_get_solved_list_no_submissions(monkeypatch) -> None:
         return httpx.Response(200, json={"status": "OK", "result": []})
 
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
-    assert await cf_client.get_solved_list(handle) == set()
+    assert await cf_client.get_solved_list(HANDLE) == set()
 
 
 async def test_get_solved_list_no_wa(monkeypatch) -> None:
@@ -42,7 +42,15 @@ async def test_get_solved_list_no_wa(monkeypatch) -> None:
         ]})
 
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
-    assert await cf_client.get_solved_list(handle) == {"4A"}
+    assert await cf_client.get_solved_list(HANDLE) == {"4A"}
+
+
+@pytest.mark.slow
+async def test_get_problemset() -> None:
+    problemset = await cf_client.get_problemset()
+    assert len(problemset) > 5000
+    assert [problem_id for problem_id, problem in problemset.items() if
+            problem["rating"] is None or problem["solved_count"] is None] == []
 
 
 @pytest.mark.parametrize("function", [cf_client.get_user_rating, cf_client.get_solved_list])
@@ -55,7 +63,7 @@ async def test_network_error(monkeypatch, function, error, regex) -> None:
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
 
     with pytest.raises(cf_client.CFError, match=regex):
-        await function(handle)
+        await function(HANDLE)
 
 
 @pytest.mark.parametrize("function", [cf_client.get_user_rating, cf_client.get_solved_list])
@@ -65,11 +73,11 @@ async def test_not_json(monkeypatch, function) -> None:
 
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
     with pytest.raises(cf_client.CFError, match="didn't return JSON"):
-        await function(handle)
+        await function(HANDLE)
 
 
 @pytest.mark.slow
 @pytest.mark.parametrize("function", [cf_client.get_user_rating, cf_client.get_solved_list])
 async def test_invalid_handle(function) -> None:
     with pytest.raises(cf_client.CFError, match="not found"):
-        await function(invalid_handle)
+        await function(INVALID_HANDLE)

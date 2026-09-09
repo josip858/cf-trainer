@@ -8,7 +8,7 @@ class CFError(Exception):
 API = "https://codeforces.com/api/"
 
 
-async def _call_api(endpoint: str, params: dict) -> dict:
+async def _call_api(endpoint: str, params: dict | None = None) -> dict:
     async with httpx.AsyncClient(timeout=10) as client:
         try:
             response = await client.get(API + endpoint, params=params)
@@ -43,3 +43,28 @@ async def get_solved_list(handle: str) -> set[str]:
         return set()
     return set(str(problem["problem"]["contestId"]) + problem["problem"]["index"] for problem in submissions if
                problem["verdict"] == "OK")
+
+
+async def get_problemset() -> dict[str, dict]:
+    data = await _call_api("problemset.problems")
+    problemset = data["result"]
+
+    solved_count_by_id = {}
+    problems_by_id = {}
+    for problem in problemset["problemStatistics"]:
+        if "contestId" not in problem:
+            continue
+        solved_count_by_id[str(problem["contestId"]) + problem["index"]] = problem["solvedCount"]
+
+    for problem in problemset["problems"]:
+        if not all(k in problem for k in ["contestId", "rating"]):
+            continue
+        problem_id = str(problem["contestId"]) + problem["index"]
+        problems_by_id[problem_id] = {
+            "name": problem["name"],
+            "rating": problem["rating"],
+            "tags": problem["tags"],
+            "solved_count": solved_count_by_id[problem_id]
+        }
+
+    return problems_by_id
