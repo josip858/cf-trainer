@@ -49,8 +49,45 @@ async def test_get_solved_list_no_wa(monkeypatch) -> None:
 async def test_get_problemset() -> None:
     problemset = await cf_client.get_problemset()
     assert len(problemset) > 5000
-    assert [problem_id for problem_id, problem in problemset.items() if
-            problem["rating"] is None or problem["solved_count"] is None] == []
+
+
+async def test_get_problemset_problem_filter(monkeypatch) -> None:
+    async def fake_get(self, *args, **kwargs):
+        return httpx.Response(200, json={"status": "OK", "result": {
+            "problems": [
+                {"name": "no_contest_id", "type": "PROGRAMMING",
+                 "rating": 800, "tags": ["brute force", "math"]},
+                {"contestId": 9999, "index": "A", "name": "unrated", "type": "PROGRAMMING",
+                 "tags": []},
+                {"contestId": 9998, "index": "A", "name": "valid1", "type": "PROGRAMMING",
+                 "rating": 900, "tags": ["dp"]},
+                {"contestId": 9997, "index": "B", "name": "valid2", "type": "PROGRAMMING",
+                 "rating": 1200, "tags": ["math", "greedy"]},
+            ],
+            "problemStatistics": [
+                {"contestId": 9997, "index": "B", "solvedCount": 42},
+                {"contestId": 9998, "index": "A", "solvedCount": 777},
+                { "index": "A", "solvedCount": 3},
+                {"contestId": 4, "index": "A", "solvedCount": 500},
+            ]}})
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
+    problems = await cf_client.get_problemset()
+
+    # filter: leave unrated and no contest_id
+    assert len(problems) == 2
+
+    # mapping: every CF key is correctly mapped
+    first = problems[0]
+    assert first.id == "9998A"
+    assert first.name == "valid1"
+    assert first.rating == 900
+    assert first.tags == ["dp"]
+    assert first.url == "https://codeforces.com/problemset/problem/9998/A"
+
+    # join: solved_count comes from corresponding problem, not from position
+    assert first.solved_count == 777
+    assert problems[1].solved_count == 42
 
 
 @pytest.mark.parametrize("function", [cf_client.get_user_rating, cf_client.get_solved_list])

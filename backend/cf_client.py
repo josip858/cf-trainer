@@ -1,4 +1,5 @@
 import httpx
+import schemas
 
 
 class CFError(Exception):
@@ -45,26 +46,26 @@ async def get_solved_list(handle: str) -> set[str]:
                problem["verdict"] == "OK")
 
 
-async def get_problemset() -> dict[str, dict]:
+async def get_problemset() -> list[schemas.Problem]:
     data = await _call_api("problemset.problems")
     problemset = data["result"]
 
     solved_count_by_id = {}
-    problems_by_id = {}
+    problems = []
     for problem in problemset["problemStatistics"]:
         if "contestId" not in problem:
             continue
-        solved_count_by_id[str(problem["contestId"]) + problem["index"]] = problem["solvedCount"]
+        solved_count_by_id[(problem["contestId"], problem["index"])] = problem["solvedCount"]
 
     for problem in problemset["problems"]:
         if not all(k in problem for k in ["contestId", "rating"]):
             continue
-        problem_id = str(problem["contestId"]) + problem["index"]
-        problems_by_id[problem_id] = {
-            "name": problem["name"],
-            "rating": problem["rating"],
-            "tags": problem["tags"],
-            "solved_count": solved_count_by_id[problem_id]
-        }
+        problems.append(schemas.Problem(contest_id=str(problem["contestId"]),
+                                        index=problem["index"],
+                                        name=problem["name"],
+                                        rating=problem["rating"],
+                                        tags=problem["tags"],
+                                        solved_count=solved_count_by_id[
+                                            (problem["contestId"], problem["index"])]))
 
-    return problems_by_id
+    return problems
