@@ -25,7 +25,7 @@ class Problem(BaseModel):
 class Pick(BaseModel):
     problem: Problem
     offset: int
-    from_neighbour: bool
+
 
 
 class PicksResponse(BaseModel):
