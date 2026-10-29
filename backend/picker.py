@@ -7,9 +7,11 @@ def get_picks(problemset: list[schemas.Problem], offsets: dict[int, int], user_r
     offsets = offsets.copy()
 
     assumed = False
-    if user_rating is None:
-        user_rating = 800
+    if user_rating is None or user_rating < 700:
+        user_rating = 700
         assumed = True
+
+    user_rating = ((user_rating+50)//100)*100
 
     if solved_problems is None:
         solved_problems = set()

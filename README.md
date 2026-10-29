@@ -17,12 +17,26 @@ version 0 — in progress.
 
 - The backend fetches user rating, solved problems and the full problemset from the
   Codeforces API.
-- Problem selection and the web interface are not built yet.
+- Problem selection is implemented through `GET /api/picks?handle=YOUR_HANDLE`.
+- The problemset is cached in memory for the current server calendar day.
+  Outgoing Codeforces requests are paced with a minimum interval of 2.1 seconds.
+- User-facing error handling and the Vue web interface are still in progress.
+
+## Selection rules
+
+- Round the user's rating to the nearest hundred.
+  Users without a rating, or with a rating below 700, use a base of 700.
+- Select up to two unsolved problems at base + 100 and one at base + 300,
+  prioritizing higher `solvedCount` within each bucket.
+- Include `rating_source` (`cf` or `assumed`) alongside the selected problems.
+
+The picker does not make network requests. `cf_client.py` handles Codeforces
+integration, `schemas.py` defines the data contracts, and `main.py` connects them.
 
 ## Tech stack
 
 - Backend: Python, FastAPI, httpx, pytest
-- Frontend: Vue 3
+- Frontend: Vue 3 (planned)
 - Deployment: Render
 
 ## Running locally
@@ -45,3 +59,9 @@ pytest -m "not slow"
 ## API
 
 - `GET /` — health check
+- `GET /api/picks?handle=YOUR_HANDLE` — select practice problems
+- `/docs` — interactive API documentation
+
+The picks endpoint currently implements the successful request path. Input
+validation and mapping Codeforces errors to user-facing HTTP responses are the
+next backend task.

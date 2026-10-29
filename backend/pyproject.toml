@@ -1,7 +1,7 @@
 [project]
 name="cf-trainer-backend"
 version ="0.1.0"
-dependencies = ["fastapi[standard]","pydantic"]
+dependencies = ["fastapi[standard]","pydantic","httpx"]
 
 [project.optional-dependencies]
 dev = ["pytest","pytest-asyncio"]
@@ -12,6 +12,6 @@ asyncio_mode="auto"
 markers= ["slow:tests that call web"]
 
 [tool.setuptools]
-py-modules=["main","cf_client","schemas"]
+py-modules=["main","cf_client","schemas","picker"]
 
 
