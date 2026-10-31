@@ -10,6 +10,10 @@ class CFError(Exception):
     """Something went wrong trying to communicate with CF"""
 
 
+class CFUserNotFound(CFError):
+    """User not found on Codeforces"""
+
+
 API = "https://codeforces.com/api/"
 fetch_lock = asyncio.Lock()
 last_fetch: float | None = None
@@ -35,6 +39,9 @@ async def _call_api(endpoint: str, params: dict | None = None) -> dict:
             raise CFError("Codeforces didn't return JSON") from e
 
         if data.get("status") != "OK":
+            comment=data.get("comment","")
+            if params is not None and "handle" in params and "not found" in comment and comment.startswith("handle: User"):
+                raise CFUserNotFound(f"User {params["handle"]} not found")
             raise CFError(data.get("comment", "Codeforces API denied the request"))
 
         return data
@@ -67,7 +74,7 @@ saved_problemset: list[schemas.Problem] | None = None
 async def get_problemset() -> list[schemas.Problem]:
     global last_problemset_fetch, saved_problemset
     async with fetch_problemset_lock:
-        if saved_problemset is not None and last_problemset_fetch==datetime.date.today():
+        if saved_problemset is not None and last_problemset_fetch == datetime.date.today():
             return saved_problemset
         data = await _call_api("problemset.problems")
         problemset = data["result"]
@@ -90,5 +97,5 @@ async def get_problemset() -> list[schemas.Problem]:
                                             solved_count=solved_count_by_id[
                                                 (problem["contestId"], problem["index"])]))
         last_problemset_fetch = datetime.date.today()
-        saved_problemset=problems
+        saved_problemset = problems
     return problems

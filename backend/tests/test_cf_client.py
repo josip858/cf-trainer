@@ -20,6 +20,19 @@ def reset_cf_state(monkeypatch):
     monkeypatch.setattr(cf_client, "fetch_problemset_lock", asyncio.Lock())
 
 
+async def test__call_api_status_failed(monkeypatch) -> None:
+    async def fake_get(self, *args, **kwargs):
+        return httpx.Response(
+            400,
+            json={"status": "FAILED", "comment": "Call limit exceeded"},
+        )
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
+
+    with pytest.raises(cf_client.CFError, match="Call limit exceeded"):
+        await cf_client._call_api("problemset.problems")
+
+
 async def test__call_api_limiter(monkeypatch)-> None:
     sent_at=[]
     async def fake_get(self,*args,**kwargs):
@@ -261,5 +274,5 @@ async def test_not_json(monkeypatch, function, args) -> None:
 @pytest.mark.slow
 @pytest.mark.parametrize("function", [cf_client.get_user_rating, cf_client.get_solved_list])
 async def test_invalid_handle(function) -> None:
-    with pytest.raises(cf_client.CFError, match="not found"):
+    with pytest.raises(cf_client.CFUserNotFound, match="not found"):
         await function(INVALID_HANDLE)
