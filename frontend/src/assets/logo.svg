@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <title>CF Trainer</title>
+  <defs>
+    <linearGradient id="red" x1="64" y1="148" x2="168" y2="366" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8580" />
+      <stop offset="0.32" stop-color="#FA5B59" />
+      <stop offset="0.7" stop-color="#EF4444" />
+      <stop offset="1" stop-color="#D93643" />
+    </linearGradient>
+    <linearGradient id="yellow" x1="231" y1="110" x2="283" y2="402" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE990" />
+      <stop offset="0.28" stop-color="#FFDB51" />
+      <stop offset="0.7" stop-color="#FACC15" />
+      <stop offset="1" stop-color="#EDB818" />
+    </linearGradient>
+    <linearGradient id="blue" x1="348" y1="146" x2="453" y2="369" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8DBBFF" />
+      <stop offset="0.32" stop-color="#609EFF" />
+      <stop offset="0.7" stop-color="#3B82F6" />
+      <stop offset="1" stop-color="#326CDA" />
+    </linearGradient>
+  </defs>
+  <g stroke-width="50" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 158 152 L 54 256 L 158 360" transform="translate(-8.273864 0)" stroke="url(#red)" />
+    <path d="M 294 112 L 218 400" stroke="url(#yellow)" />
+    <path d="M 354 152 L 458 256 L 354 360" transform="translate(8.273864 0)" stroke="url(#blue)" />
+  </g>
+</svg>
